@@ -4,8 +4,10 @@
   "description": "Collaborative reporting of issues in your city",
   "main": "app.js",
   "scripts": {
-    "start:dev": "./node_modules/.bin/webpack --progress --mode=development --watch --config webpack.config.dev.js",
-    "build": "./node_modules/.bin/webpack --progress --mode=production --config webpack.config.prod.js"
+    "build": "./node_modules/.bin/webpack --progress --mode=production --config webpack.config.prod.js",
+    "start:client": "./node_modules/.bin/webpack --progress --mode=development --watch --config webpack.config.dev.js",
+    "start:server": "node server.js",
+    "start:dev": "./node_modules/.bin/concurrently --kill-others 'npm run start:client' 'npm run start:server'"
   },
   "repository": {
     "type": "git",
@@ -20,7 +22,6 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
-    "node": "^10.10.0",
     "react": "^16.5.1",
     "react-dom": "^16.5.1",
     "react-router-dom": "^4.3.1",
@@ -31,6 +32,7 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
     "babel-loader": "^8.0.2",
+    "concurrently": "^4.0.1",
     "css-loader": "^1.0.0",
     "extract-text-webpack-plugin": "4.0.0-beta.0",
     "file-loader": "^2.0.0",

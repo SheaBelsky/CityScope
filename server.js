@@ -9,6 +9,7 @@ Author: Zachary Anderson AKA ZachARuba
 
 //require('dotenv').load();
 const express = require("express");
+const path = require("path");
 
 /*
     APPLICATION
@@ -16,11 +17,12 @@ const express = require("express");
 
 const app = express();
 
-var port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-app.get('/', function(req, res){
-  res.send('Hello World!')
-})
+// Serve React app
+const clientDirectory = path.join(__dirname, "client", "dist");
+app.use(express.static(clientDirectory));
+app.use("/app*", express.static(clientDirectory));
 
 app.listen(port, function(){
   console.log("Go to http://localhost:" + port);
