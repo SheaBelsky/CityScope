@@ -1,6 +1,10 @@
 import React from "react";
 import GoogleMapReact from "google-map-react";
-import { Dimmer, Loader } from "semantic-ui-react";
+import {
+    Dimmer, Grid, Icon, Loader, Menu, Segment, Sidebar,
+} from "semantic-ui-react";
+
+import UserViewTemplate from "../../components/UserViewTemplate";
 
 class MapView extends React.Component {
     constructor() {
@@ -10,6 +14,7 @@ class MapView extends React.Component {
                 lat: 59.95,
                 lng: 30.33,
             },
+            loaded: false,
             zoom: 18,
         };
     }
@@ -31,6 +36,7 @@ class MapView extends React.Component {
 
     // When someone clicks on the map
     handleOnClick = (clickEvent) => {
+        console.log("click on map");
         const {
             x, y, lat, lng, event,
         } = clickEvent;
@@ -41,14 +47,16 @@ class MapView extends React.Component {
 
     // When all the Google Maps tiles have loaded
     handleTilesLoaded = () => {
-        const { undim } = this.props;
-        undim();
+        console.log("loaded");
+        this.setState({
+            loaded: true,
+        });
     }
 
     render() {
-        const { center, zoom } = this.state;
+        const { center, loaded, zoom } = this.state;
         return (
-            <div className="mapContainer">
+            <UserViewTemplate loaded={loaded}>
                 <GoogleMapReact
                     bootstrapURLKeys={{ key: process.env.GOOGLE_MAPS_API_KEY }}
                     center={center}
@@ -56,7 +64,7 @@ class MapView extends React.Component {
                     onClick={this.handleOnClick}
                     onTilesLoaded={this.handleTilesLoaded}
                 />
-            </div>
+            </UserViewTemplate>
         );
     }
 }
