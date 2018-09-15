@@ -1,0 +1,31 @@
+{
+    "extends": "airbnb",
+    "parser": "babel-eslint",
+    "rules": {
+        "indent": ["error", 4],
+        "quotes": [
+            "error", "double", {
+                "allowTemplateLiterals": true
+            }
+        ],
+        "react/forbid-prop-types": "off",
+        "react/jsx-boolean-value": "off",
+        "react/jsx-filename-extension": "off",
+        "react/jsx-indent": ["error", 4],
+        "react/jsx-indent-props": ["error", 4],
+        "react/jsx-one-expression-per-line": "off",
+        "react/no-array-index-key": "off",
+        "react/no-unescaped-entities": "off",
+        "semi": [
+            "error", "always"
+        ]
+    },
+    "parserOptions": {
+        "ecmaFeatures": {
+            "experimentalObjectRestSpread": true
+        }
+    },
+    "plugins": [
+        "react"
+    ]
+}
