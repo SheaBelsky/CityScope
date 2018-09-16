@@ -39,13 +39,7 @@ class UserMapView extends React.Component {
                 });
             });
         }
-        fetch("/api/read/report")
-            .then(response => response.json())
-            .then((response) => {
-                this.setState({
-                    markers: response,
-                });
-            });
+        this.getReports();
     }
 
     // ==============
@@ -118,10 +112,21 @@ class UserMapView extends React.Component {
                 "Content-Type": "application/json",
             },
         }).then((response) => {
+            this.getReports();
             this.resetModal();
         }).catch((err) => {
             console.error(err, "error");
         });
+    }
+
+    getReports = () => {
+        fetch("/api/read/report")
+            .then(response => response.json())
+            .then((response) => {
+                this.setState({
+                    markers: response,
+                });
+            });
     }
 
     // Resets the modal (after submission or when closed)
@@ -180,8 +185,7 @@ class UserMapView extends React.Component {
                     {
                         markers.length > 0 && markers.map((marker) => {
                             if (marker !== null && typeof marker === "object") {
-                                // const [lat, lng] = marker.coordinates.split(",");
-                                console.log(marker);
+                                const [lat, lng] = marker.coordinates.split(",");
                                 return (
                                     <ReportIcon
                                         className="reportIcon"

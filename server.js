@@ -54,7 +54,6 @@ app.put("/api/create/report/", (req, res, next) => {
     async.waterfall([
         (waterfallCB) => {
             // Create a new incident if necessary
-            console.log(incidentID);
             if (typeof incidentID === "undefined") {
                 // Take the existing route and put part of it into a function.
                 // Pass coordinates, createdAt to the incident to be created
@@ -64,8 +63,8 @@ app.put("/api/create/report/", (req, res, next) => {
             }
         },
         (newIncidentID, waterfallCB) => {
-            const query = `INSERT INTO report (sentiment, description, incident_id, updated)
-            VALUES ('${sentiment}', '${description}', ${newIncidentID}, ${updatedAt})`;
+            const query = `INSERT INTO report (sentiment, description, incident_id, updated, coordinates)
+            VALUES ('${sentiment}', '${description}', ${newIncidentID}, ${updatedAt}, '${coordinates}')`;
             db.run(query, waterfallCB);
         },
     ], (err) => {
@@ -212,7 +211,7 @@ app.get("/api/read/incident/:incident_id/", (req, res, next) => {
 
     const query = `SELECT * FROM incident WHERE incident_id = ${incident_id}`;
 
-    db.run(query, (err, results) => {
+    db.all(query, [], (err, results) => {
         if (!err) {
             return res.status(200).send(results);
         } else {

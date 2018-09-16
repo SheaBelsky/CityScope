@@ -1,16 +1,31 @@
 import React from "react";
-import { Icon, Modal } from "semantic-ui-react";
+import {
+    Form, Icon, Modal, TextArea,
+} from "semantic-ui-react";
 
 class ReportIcon extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            incident: null,
             showModal: false,
         };
     }
 
+    componentDidMount() {
+        const { marker } = this.props;
+        fetch(`/api/read/incident/${marker.incident_id}`)
+            .then(response => response.json())
+            .then((response) => {
+                this.setState({
+                    incident: response[0],
+                });
+            }).catch((error) => {
+                console.error(error);
+            });
+    }
+
     handleClick = () => {
-        console.log("click");
         this.setState({
             showModal: true,
         });
@@ -23,7 +38,7 @@ class ReportIcon extends React.Component {
     }
 
     render() {
-        const { marker } = this.props;
+        const { admin = false, marker } = this.props;
         const { showModal } = this.state;
         const {
             coordinates: {
@@ -55,12 +70,36 @@ class ReportIcon extends React.Component {
                     <Modal.Header>View Report</Modal.Header>
                     <Modal.Content>
                         <Modal.Description>
-                            <div>
-                                <h2>Describe the issue in detail</h2>
-                                {description}
-                                <h2>Created At</h2>
-                                {createdAt}
-                            </div>
+                            {
+                                admin === true
+                                    ? (
+                                        <Form onSubmit={this.createReport}>
+                                            <h2>Report Details</h2>
+                                            {description}
+                                            <TextArea
+                                                autoFocus
+                                                name="issueDetails"
+                                                placeholder="Resolution of this report?"
+                                                value={marker.resolution}
+                                            />
+                                            <Form.Button
+                                                style={{
+                                                    display: "block",
+                                                    margin: "10px auto",
+                                                }}
+                                            >
+                                                Edit Report
+                                            </Form.Button>
+                                        </Form>
+                                    ) : (
+                                        <div>
+                                            <h2>Describe the issue in detail</h2>
+                                            {description}
+                                            <h2>Created At</h2>
+                                            {createdAt}
+                                        </div>
+                                    )}
+
                         </Modal.Description>
                     </Modal.Content>
                 </Modal>
