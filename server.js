@@ -10,6 +10,7 @@ Author: Zachary Anderson AKA ZachARuba
 require("dotenv").load();
 const bodyParser = require("body-parser");
 const distance = require("google-distance-matrix");
+const https = require('https');
 const express = require("express");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
@@ -133,25 +134,72 @@ app.put("/api/create/incident/", (req, res, next) => {
     // Survey Monkey should not be passed from the frontend, it should be created by a function
     // on the server. That functionality to create a server and bind it to the new incident should
     // take place here.
-    const {
-        survey_monkey,
-        progress,
-        coordinates,
-        resolution,
-        updated,
-    } = req.body;
 
-    const query = `INSERT INTO incident (survey_monkey, progress, coordinates, resolution, updated) `
-        + `VALUES ('${survey_monkey}', ${progress}, '${coordinates}', '${resolution}', ${updated})`;
+    createNewSurvey( (err, surveyVal) => {
+      if (!err) {
+        const { id: surveyId } = surveyVal;
+        const {
+            progress,
+            coordinates,
+            resolution,
+            updated,
+        } = req.body;
 
-    db.run(query, (err) => {
-        if (!err) {
-            return res.status(200);
-        } else {
-            return res.status(500).send(err);
-        }
+        const query = `INSERT INTO incident (survey_monkey, progress, coordinates, resolution, updated) `
+            + `VALUES ('${surveyId}', ${progress}, '${coordinates}', '${resolution}', ${updated})`;
+
+        db.run(query, (err) => {
+            if (!err) {
+                return res.status(200);
+            } else {
+                return res.status(500).send(err);
+            }
+        });
+      }
+      else {
+        console.log(err);
+      }
     });
 });
+
+function createNewSurvey(cb) {
+  var testData = {
+    'title': 'New Survey',
+    'from_survey_id':'158112240'
+  }
+
+  var buffer;
+
+  var options = {
+    hostname: 'api.surveymonkey.com',
+    path: '/v3/surveys',
+    method: 'POST',
+    headers: {
+         'Content-Type': 'application/JSON',
+         //'Content-Length': testData.length,
+         'Authorization' : `bearer ${surveymonkey_key}`
+       }
+  };
+
+  var req = https.request(options, (res) => {
+    //console.log('statusCode:', res.statusCode);
+    //console.log('headers:', res.headers);
+
+    res.on('data', (d) => {
+      buffer = buffer + d;
+    });
+
+    res.on('end', () => {
+      return cb(null, buffer);
+    }).on('error', (err) => {
+      return cb(err);
+    });
+  });
+  req.write(JSON.stringify(testData));
+  req.end(()=>{
+    // console.log(buffer, "final buffer");
+  });
+}
 
 // READ
 app.get("/api/read/incident/:incident_id/", (req, res, next) => {
