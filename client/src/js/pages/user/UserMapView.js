@@ -17,7 +17,9 @@ class UserMapView extends React.Component {
                 lng: 30.33,
             },
             clickedCoords: {},
+            existingIncidentID: null,
             loaded: false,
+            markers: [],
             reportDescription: "",
             showNewReportModal: false,
             zoom: 18,
@@ -37,6 +39,13 @@ class UserMapView extends React.Component {
                 });
             });
         }
+        fetch("/api/read/report")
+            .then(response => response.json())
+            .then((response) => {
+                this.setState({
+                    markers: response,
+                });
+            });
     }
 
     // ==============
@@ -53,14 +62,23 @@ class UserMapView extends React.Component {
     // When someone clicks on the map
     handleOnClick = (clickEvent) => {
         const {
-            x, y, lat, lng, event,
+            lat, lng,
         } = clickEvent;
-        this.setState({
-            clickedCoords: {
-                lat, lng,
-            },
-            showNewReportModal: true,
-        });
+        fetch(`/api/distance/${lat}/${lng}`)
+            .then(response => response.json())
+            .then((response) => {
+                const { existingIncidentID } = response;
+                this.setState({
+                    clickedCoords: {
+                        lat, lng,
+                    },
+                    existingIncidentID,
+                    showNewReportModal: true,
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+            });
         // API endpoint: Determine if there is an existing report within 100 meters of this location
         // If yes, get its information (incident ID) and add to this report
         // If not, the creation of this report should create a new incident (and incident ID)
@@ -84,11 +102,12 @@ class UserMapView extends React.Component {
 
     // Creates a new report by saving it in local storage
     createReport = () => {
-        const { clickedCoords, reportDescription } = this.state;
-        const now = new Date();
+        const { clickedCoords, existingIncidentID, reportDescription } = this.state;
+        const now = Math.round((new Date()).getTime() / 1000);
         const report = {
-            coordinates: clickedCoords,
+            coordinates: `${clickedCoords.lat},${clickedCoords.lng}`,
             description: reportDescription,
+            incidentID: existingIncidentID,
             createdAt: now,
             updatedAt: now,
         };
@@ -98,47 +117,17 @@ class UserMapView extends React.Component {
             headers: {
                 "Content-Type": "application/json",
             },
-        })
-            .then((response) => {
-                console.log(response);
-                this.resetModal();
-            })
-            .catch((err) => {
-                console.error(err);
-            });
-
-        // let numReports = localStorage.getItem("numReports");
-        // if (numReports !== null && !isNaN(numReports)) {
-        //     numReports = parseInt(numReports);
-        //     report.id = numReports + 1;
-        //     const stringifiedReport = JSON.stringify(report);
-        //     localStorage.setItem("numReports", `${report.id}`);
-        //     localStorage.setItem(`report${report.id}`, stringifiedReport);
-        // } else {
-        //     report.id = 1;
-        //     const stringifiedReport = JSON.stringify(report);
-        //     localStorage.setItem("numReports", "1");
-        //     localStorage.setItem("report1", stringifiedReport);
-        // }
-    }
-
-    // Retrieves markers from localStorage, processes them, and returns in the form of an array
-    processsMarkers = () => {
-        let numReports = localStorage.getItem("numReports");
-        const markers = [];
-        if (numReports !== null && !isNaN(numReports)) {
-            numReports = parseInt(numReports);
-            for (let i = 1; i <= numReports; i++) {
-                const report = localStorage.getItem(`report${i}`);
-                markers.push(JSON.parse(report));
-            }
-        }
-        return markers;
+        }).then((response) => {
+            this.resetModal();
+        }).catch((err) => {
+            console.error(err, "error");
+        });
     }
 
     // Resets the modal (after submission or when closed)
     resetModal = () => {
         this.setState({
+            existingIncidentID: null,
             reportDescription: "",
             showNewReportModal: false,
         });
@@ -147,9 +136,8 @@ class UserMapView extends React.Component {
     // The render function
     render() {
         const {
-            center, loaded, reportDescription, showNewReportModal, zoom,
+            center, loaded, markers, reportDescription, showNewReportModal, zoom,
         } = this.state;
-        const markers = this.processsMarkers();
         return (
             <UserViewTemplate loaded={loaded}>
                 <Modal
@@ -192,12 +180,14 @@ class UserMapView extends React.Component {
                     {
                         markers.length > 0 && markers.map((marker) => {
                             if (marker !== null && typeof marker === "object") {
+                                // const [lat, lng] = marker.coordinates.split(",");
+                                console.log(marker);
                                 return (
                                     <ReportIcon
                                         className="reportIcon"
-                                        key={marker.id}
-                                        lat={marker.coordinates.lat}
-                                        lng={marker.coordinates.lng}
+                                        key={marker.report_id}
+                                        lat={lat}
+                                        lng={lng}
                                         marker={marker}
                                     />
                                 );
