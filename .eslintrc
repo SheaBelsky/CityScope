@@ -3,6 +3,7 @@
     "parser": "babel-eslint",
     "rules": {
         "indent": ["error", 4],
+        "no-else-return": "off",
         "quotes": [
             "error", "double", {
                 "allowTemplateLiterals": true
