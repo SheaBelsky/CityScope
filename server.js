@@ -11,7 +11,6 @@ require("dotenv").load();
 const express = require("express");
 const path = require("path");
 const SurveyMonkeyAPI = require("surveymonkey").SurveyMonkeyAPI;
-var SurveyMonkeyAPI = require('surveymonkey').SurveyMonkeyAPI;
 var distance = require('google-distance-matrix');
 distance.units('metric');
 distance.key('AIzaSyDG_kiaUVSjUHOrP_UpKWvKiQF1hhA5rIM');
@@ -35,16 +34,16 @@ app.use("/app*", express.static(clientDirectory));
 var sqlite3 = require('sqlite3').verbose();
 var db = new sqlite3.Database('database.db');
 
-//Surveymonkey example
+// Surveymonkey example
 try {
     var api = new SurveyMonkeyAPI(surveymonkey_key, { version: "v3", secure: false });
 } catch (error) {
     console.log(error.message);
 }
 
-api.getSurveyList({}, (error, data) => {
-    if (error) { console.log(error.message); } else { console.log(JSON.stringify(data)); } // Do something with your data!
-});
+// api.getSurveyList({}, (error, data) => {
+//     if (error) { console.log(error.message); } else { console.log(JSON.stringify(data)); } // Do something with your data!
+// });
 // api.getSurveyList({}, function (error, data) {
 //     if (error)
 //         console.log(error.message);
@@ -65,15 +64,14 @@ api.getSurveyDetails({id:'113260729'},function (error, data) {
 ////// Report Database
 
 // CREATE
-app.put('/api/create/:report_id/:sentiment/:description/:incident_id/:updated', function (req, res, next) {
-    var report_id = req.params.report_id;
+app.put('/api/create/report/:sentiment/:description/:incident_id/:updated', function (req, res, next) {
     var sentiment = req.params.sentiment;
     var description = req.params.description;
     var incident_id = req.params.incident_id;
     var updated = req.params.updated;
 
-    const query = `INSERT INTO report (report_id, sentiment, description, incident_id, updated) ` +
-        `VALUES (${report_id}, '${sentiment}', '${description}', ${incident_id}, ${updated})`;
+    const query = `INSERT INTO report (sentiment, description, incident_id, updated) ` +
+        `VALUES ('${sentiment}', '${description}', ${incident_id}, ${updated})`;
 
     db.run(query);
 
@@ -81,15 +79,15 @@ app.put('/api/create/:report_id/:sentiment/:description/:incident_id/:updated', 
 });
 
 // READ
-app.get('/api/read/:report_id/:sentiment/:description/:incident_id/:updated', function (req, res, next) {
+app.get('/api/read/report/:report_id/:sentiment/:description/:incident_id/:updated', function (req, res, next) {
     var report_id = req.params.report_id;
     var sentiment = req.params.sentiment;
     var description = req.params.description;
     var incident_id = req.params.incident_id;
     var updated = req.params.updated;
 
-    const query = `INSERT INTO report (report_id, sentiment, description, incident_id, updated) ` +
-        `VALUES (${report_id}, '${sentiment}', '${description}', ${incident_id}, ${updated})`;
+    const query = `SELECT * FROM report WHERE report_id = ${report_id}, sentiment = '${sentiment}', ` +
+        `description = '${description}', incident_id = ${incident_id}, updated) = ${updated})`;
 
     db.run(query);
 
@@ -97,14 +95,14 @@ app.get('/api/read/:report_id/:sentiment/:description/:incident_id/:updated', fu
 });
 
 // DELETE
-app.get('/api/delete/:report_id/:sentiment/:description/:incident_id/:updated', function (req, res, next) {
+app.get('/api/delete/report/:report_id/:sentiment/:description/:incident_id/:updated', function (req, res, next) {
     var report_id = req.params.report_id;
     var sentiment = req.params.sentiment;
     var description = req.params.description;
     var incident_id = req.params.incident_id;
     var updated = req.params.updated;
 
-    const query = `INSERT INTO report WHERE report_id = ${report_id}, sentiment = '${sentiment}', ` +
+    const query = `DELETE FROM report WHERE report_id = ${report_id}, sentiment = '${sentiment}', ` +
         `description = '${description}', incident_id = ${incident_id}, updated) = ${updated})`;
 
     db.run(query);
@@ -114,14 +112,24 @@ app.get('/api/delete/:report_id/:sentiment/:description/:incident_id/:updated', 
 
 ////// Incident Database
 
-// READ
-app.get('/api/read/incident', function (req, res, next) {
-    // const query = `SELECT * FROM incident`;
-    // res.json(db.all(query));
+// CREATE
+app.put('/api/create/incident/:survey_monkey/:progress/:coordinates/:resolution/:updated', function (req, res, next) {
+    var survey_monkey = req.params.survey_monkey;
+    var progress = req.params.progress;
+    var coordinates = req.params.coordinates;
+    var resolution = req.params.resolution;
+    var updated = req.params.updated;
+
+    const query = `INSERT INTO incident (survey_monkey, progress, coordinates, resolution, updated) ` +
+        `VALUES ('${survey_monkey}', ${progress}, '${coordinates}', '${resolution}', ${updated})`;
+
+    db.run(query);
+
+    res.status(200);
 });
 
-// CREATE
-app.put('/api/create/:incident_id/:survey_monkey/:progress/:coordinates/:resolution/:updated', function (req, res, next) {
+// READ
+app.put('/api/read/incident/:incident_id/:survey_monkey/:progress/:coordinates/:resolution/:updated', function (req, res, next) {
     var incident_id = req.params.incident_id;
     var survey_monkey = req.params.survey_monkey;
     var progress = req.params.progress;
@@ -129,8 +137,25 @@ app.put('/api/create/:incident_id/:survey_monkey/:progress/:coordinates/:resolut
     var resolution = req.params.resolution;
     var updated = req.params.updated;
 
-    const query = `INSERT INTO incident (incident_id, survey_monkey, progress, coordinates, resolution, updated) ` +
-        `VALUES (${incident_id}, '${survey_monkey}', ${progress}, '${coordinates}', '${resolution}', ${updated})`;
+    const query = `SELECT * FROM incident WHERE incident_id = ${incident_id}, survey_monkey = '${survey_monkey}', ` +
+        `progress = ${progress}, coordinates = '${coordinates}', resolution = '${resolution}', updated) ${updated}`;
+
+    db.run(query);
+
+    res.status(200);
+});
+
+// DELETE
+app.put('/api/create/incident/:incident_id/:survey_monkey/:progress/:coordinates/:resolution/:updated', function (req, res, next) {
+    var incident_id = req.params.incident_id;
+    var survey_monkey = req.params.survey_monkey;
+    var progress = req.params.progress;
+    var coordinates = req.params.coordinates;
+    var resolution = req.params.resolution;
+    var updated = req.params.updated;
+
+    const query = `DELETE FROM incident WHERE incident_id = ${incident_id}, survey_monkey = '${survey_monkey}', ` +
+    `progress = ${progress}, coordinates = '${coordinates}', resolution = '${resolution}', updated) ${updated}`;
 
     db.run(query);
 
