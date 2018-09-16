@@ -22,15 +22,15 @@ const port = process.env.PORT || 3000;
 const DISTANCE_THRESHOLD = 50;
 const surveymonkey_key = process.env.SURVEYMONKEY_AUTH;
 
-// Serve React app
-const clientDirectory = path.join(__dirname, "client", "dist");
-app.use(express.static(clientDirectory));
-app.use("/app*", express.static(clientDirectory));
-
 // Body Parser
 // Miscellanous settings
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+// Serve React app
+const clientDirectory = path.join(__dirname, "client", "dist");
+app.use(express.static(clientDirectory));
+app.use("/app*", express.static(clientDirectory));
 
 // Database
 const db = new sqlite3.Database("database.db");
@@ -54,7 +54,6 @@ app.put("/api/create/report/", (req, res, next) => {
     async.waterfall([
         (waterfallCB) => {
             // Create a new incident if necessary
-            console.log(incidentID);
             if (typeof incidentID === "undefined") {
                 // Take the existing route and put part of it into a function.
                 // Pass coordinates, createdAt to the incident to be created
@@ -64,8 +63,8 @@ app.put("/api/create/report/", (req, res, next) => {
             }
         },
         (newIncidentID, waterfallCB) => {
-            const query = `INSERT INTO report (sentiment, description, incident_id, updated)
-            VALUES ('${sentiment}', '${description}', ${newIncidentID}, ${updatedAt})`;
+            const query = `INSERT INTO report (sentiment, description, incident_id, updated, coordinates)
+            VALUES ('${sentiment}', '${description}', ${newIncidentID}, ${updatedAt}, '${coordinates}')`;
             db.run(query, waterfallCB);
         },
     ], (err) => {
@@ -212,7 +211,7 @@ app.get("/api/read/incident/:incident_id/", (req, res, next) => {
 
     const query = `SELECT * FROM incident WHERE incident_id = ${incident_id}`;
 
-    db.run(query, (err, results) => {
+    db.all(query, [], (err, results) => {
         if (!err) {
             return res.status(200).send(results);
         } else {
