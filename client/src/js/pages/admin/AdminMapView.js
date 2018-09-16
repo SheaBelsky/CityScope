@@ -16,6 +16,7 @@ class AdminMapView extends React.Component {
             },
             loaded: false,
             markers: [],
+            showNewReportModal: false,
             zoom: 18,
         };
     }
@@ -33,13 +34,7 @@ class AdminMapView extends React.Component {
                 });
             });
         }
-        fetch("/api/read/report")
-            .then(response => response.json())
-            .then((response) => {
-                this.setState({
-                    markers: response,
-                });
-            });
+        this.getReports();
     }
 
     // ==============
@@ -56,6 +51,15 @@ class AdminMapView extends React.Component {
     // ==============
     // Custom Methods
     // ==============
+    getReports = () => {
+        fetch("/api/read/report")
+            .then(response => response.json())
+            .then((response) => {
+                this.setState({
+                    markers: response,
+                });
+            });
+    }
 
     // The render function
     render() {
@@ -74,8 +78,7 @@ class AdminMapView extends React.Component {
                     {
                         markers.length > 0 && markers.map((marker) => {
                             if (marker !== null && typeof marker === "object") {
-                                // const [lat, lng] = marker.coordinates.split(",");
-                                console.log(marker);
+                                const [lat, lng] = marker.coordinates.split(",");
                                 return (
                                     <ReportIcon
                                         admin={true}

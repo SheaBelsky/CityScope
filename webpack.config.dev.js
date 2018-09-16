@@ -35,7 +35,7 @@ module.exports = {
     entry: `${__dirname}/client/src/index.js`,
     output: {
         path: `${__dirname}/client/dist`,
-        publicPath: "/",
+        publicPath: PUBLIC_PATH,
         filename: "js/bundle.js",
     },
     devtool: "eval-source-map",

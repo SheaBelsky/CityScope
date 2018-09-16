@@ -34,12 +34,20 @@ class UserViewTemplate extends React.Component {
                                         <Icon name="home" />
                                         Map
                                     </Menu.Item>
-                                    <Menu.Item as={NavLink} to="/app/user/myreports">
-                                        <Icon name="gamepad" />
-                                        My Reports
+                                    <Menu.Item as={NavLink} to="/app/reports">
+                                        <Icon name="newspaper" />
+                                        View Reports
+                                    </Menu.Item>
+                                    <Menu.Item as={NavLink} to="/app/admin/reports">
+                                        <Icon name="diamond" />
+                                        View Reports (Admin)
+                                    </Menu.Item>
+                                    <Menu.Item as={NavLink} to="/app/incidents">
+                                        <Icon name="info circle" />
+                                        View Incidents
                                     </Menu.Item>
                                     <Menu.Item as={NavLink} to="/app/about">
-                                        <Icon name="camera" />
+                                        <Icon name="child" />
                                         About
                                     </Menu.Item>
                                 </Sidebar>

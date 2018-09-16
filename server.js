@@ -22,15 +22,15 @@ const port = process.env.PORT || 3000;
 const DISTANCE_THRESHOLD = 50;
 const surveymonkey_key = process.env.SURVEYMONKEY_AUTH;
 
-// Serve React app
-const clientDirectory = path.join(__dirname, "client", "dist");
-app.use(express.static(clientDirectory));
-app.use("/app*", express.static(clientDirectory));
-
 // Body Parser
 // Miscellanous settings
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+// Serve React app
+const clientDirectory = path.join(__dirname, "client", "dist");
+app.use(express.static(clientDirectory));
+app.use("/app*", express.static(clientDirectory));
 
 // Database
 const db = new sqlite3.Database("database.db");
