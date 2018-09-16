@@ -30,23 +30,19 @@ class UserViewTemplate extends React.Component {
                                     width="thin"
                                 >
                                     <h1>CityScope</h1>
-                                    <Menu.Item as={NavLink} to="/app/">
-                                        <Icon name="home" />
-                                        Map
-                                    </Menu.Item>
-                                    <Menu.Item as={NavLink} to="/app/reports">
+                                    <Menu.Item as={NavLink} exact to="/app/">
                                         <Icon name="newspaper" />
                                         View Reports
                                     </Menu.Item>
-                                    <Menu.Item as={NavLink} to="/app/admin/reports">
+                                    <Menu.Item as={NavLink} exact to="/app/admin/">
                                         <Icon name="diamond" />
                                         View Reports (Admin)
                                     </Menu.Item>
-                                    <Menu.Item as={NavLink} to="/app/incidents">
+                                    <Menu.Item as={NavLink} exact to="/app/admin/incidents">
                                         <Icon name="info circle" />
                                         View Incidents
                                     </Menu.Item>
-                                    <Menu.Item as={NavLink} to="/app/about">
+                                    <Menu.Item as={NavLink} exact to="/app/about">
                                         <Icon name="child" />
                                         About
                                     </Menu.Item>

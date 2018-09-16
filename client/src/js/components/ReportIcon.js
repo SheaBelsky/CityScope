@@ -1,6 +1,6 @@
 import React from "react";
 import {
-    Form, Icon, Modal, TextArea,
+    Icon, Modal,
 } from "semantic-ui-react";
 
 class ReportIcon extends React.Component {
@@ -44,7 +44,7 @@ class ReportIcon extends React.Component {
             coordinates: {
                 lat, lng,
             },
-            createdAt,
+            updated,
             description,
             id,
         } = marker;
@@ -70,36 +70,10 @@ class ReportIcon extends React.Component {
                     <Modal.Header>View Report</Modal.Header>
                     <Modal.Content>
                         <Modal.Description>
-                            {
-                                admin === true
-                                    ? (
-                                        <Form onSubmit={this.createReport}>
-                                            <h2>Report Details</h2>
-                                            {description}
-                                            <TextArea
-                                                autoFocus
-                                                name="issueDetails"
-                                                placeholder="Resolution of this report?"
-                                                value={marker.resolution}
-                                            />
-                                            <Form.Button
-                                                style={{
-                                                    display: "block",
-                                                    margin: "10px auto",
-                                                }}
-                                            >
-                                                Edit Report
-                                            </Form.Button>
-                                        </Form>
-                                    ) : (
-                                        <div>
-                                            <h2>Describe the issue in detail</h2>
-                                            {description}
-                                            <h2>Created At</h2>
-                                            {createdAt}
-                                        </div>
-                                    )}
-
+                            <h2>Report Details</h2>
+                            {description}
+                            <h2 style={{ marginTop: 10 }}>Created At</h2>
+                            {`${new Date(updated * 1000).toLocaleDateString()}`}
                         </Modal.Description>
                     </Modal.Content>
                 </Modal>
