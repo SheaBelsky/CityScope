@@ -138,7 +138,7 @@ app.put('/api/read/incident/:incident_id/:survey_monkey/:progress/:coordinates/:
     var updated = req.params.updated;
 
     const query = `SELECT * FROM incident WHERE incident_id = ${incident_id}, survey_monkey = '${survey_monkey}', ` +
-        `progress = ${progress}, coordinates = '${coordinates}', resolution = '${resolution}', updated) ${updated}`;
+        `progress = ${progress}, coordinates = '${coordinates}', resolution = '${resolution}', updated = ${updated}`;
 
     db.run(query);
 
@@ -155,7 +155,7 @@ app.put('/api/create/incident/:incident_id/:survey_monkey/:progress/:coordinates
     var updated = req.params.updated;
 
     const query = `DELETE FROM incident WHERE incident_id = ${incident_id}, survey_monkey = '${survey_monkey}', ` +
-    `progress = ${progress}, coordinates = '${coordinates}', resolution = '${resolution}', updated) ${updated}`;
+    `progress = ${progress}, coordinates = '${coordinates}', resolution = '${resolution}', updated = ${updated}`;
 
     db.run(query);
 
