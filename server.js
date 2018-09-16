@@ -178,17 +178,6 @@ function createNewIncident(data, cb) {
     });
 }
 
-// // CREATE a new incident
-// app.put("/api/create/incident/", (req, res, next) => {
-//     createNewIncident(req.body, (err, results) => {
-//         if (!err) {
-//             return res.status(200);
-//         } else {
-//             return res.status(500).send(err);
-//         }
-//     });
-// });
-
 // READ all reports
 app.get("/api/read/incident/", (req, res) => {
     // limit???

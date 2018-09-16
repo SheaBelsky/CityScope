@@ -38,7 +38,7 @@ class UserViewTemplate extends React.Component {
                                         <Icon name="diamond" />
                                         View Reports (Admin)
                                     </Menu.Item>
-                                    <Menu.Item as={NavLink} exact to="/app/incidents">
+                                    <Menu.Item as={NavLink} exact to="/app/admin/incidents">
                                         <Icon name="info circle" />
                                         View Incidents
                                     </Menu.Item>
