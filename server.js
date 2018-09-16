@@ -8,22 +8,18 @@ Author: Zachary Anderson AKA ZachARuba
 */
 
 require("dotenv").load();
+const async = require("async");
 const bodyParser = require("body-parser");
-const distance = require("google-distance-matrix");
-const https = require('https');
+const https = require("https");
 const express = require("express");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 const { SurveyMonkeyAPI } = require("surveymonkey");
 
-distance.units("metric");
-distance.key("AIzaSyDG_kiaUVSjUHOrP_UpKWvKiQF1hhA5rIM");
-
-const DISTANCE_THRESHOLD = 50;
-
 const app = express();
 const port = process.env.PORT || 3000;
 
+const DISTANCE_THRESHOLD = 50;
 const surveymonkey_key = process.env.SURVEYMONKEY_AUTH;
 
 // Serve React app
@@ -42,29 +38,9 @@ const db = new sqlite3.Database("database.db");
 // Surveymonkey example
 const api = new SurveyMonkeyAPI(surveymonkey_key, { version: "v3", secure: false });
 
-// api.getSurveyList({}, (error, data) => {
-//     if (error) { console.log(error.message); } else { console.log(JSON.stringify(data)); } // Do something with your data!
-// });
-// api.getSurveyList({}, function (error, data) {
-//     if (error)
-//         console.log(error.message);
-//     else
-//         console.log(JSON.stringify(data)); // Do something with your data!
-// });
-
-/*
-api.getSurveyDetails({id:'113260729'},function (error, data) {
-    if (error)
-        console.log(error);
-    else
-        console.log(JSON.stringify(data)); // Do something with your data!
-});
-*/
-
-
 // //// Report Database
 
-// CREATE
+// CREATE a report
 app.put("/api/create/report/", (req, res, next) => {
     const {
         coordinates,
@@ -75,25 +51,33 @@ app.put("/api/create/report/", (req, res, next) => {
         updatedAt,
     } = req.body;
 
-    const query = `INSERT INTO report (sentiment, description, incident_id, updated) `
-        + `VALUES ('${sentiment}', '${description}', ${incidentID}, ${updatedAt})`;
-
-    // TODO: Create a matching incident if no incidentID is provided by the client
-    if (typeof incidentID !== "undefined") {
-        // Take the existing route and put part of it into a function.
-        // Pass coordinates, createdAt to the incident to be created
-    }
-
-    db.run(query, (err) => {
+    async.waterfall([
+        (waterfallCB) => {
+            // Create a new incident if necessary
+            console.log(incidentID);
+            if (typeof incidentID === "undefined") {
+                // Take the existing route and put part of it into a function.
+                // Pass coordinates, createdAt to the incident to be created
+                createNewIncident({ coordinates, updatedAt }, waterfallCB);
+            } else {
+                return waterfallCB(null, incidentID);
+            }
+        },
+        (newIncidentID, waterfallCB) => {
+            const query = `INSERT INTO report (sentiment, description, incident_id, updated)
+            VALUES ('${sentiment}', '${description}', ${newIncidentID}, ${updatedAt})`;
+            db.run(query, waterfallCB);
+        },
+    ], (err) => {
         if (!err) {
-            return res.status(200);
+            return res.status(200).json({ success: true });
         } else {
             return res.status(500).send(err);
         }
     });
 });
 
-// READ
+// READ a report given its id
 app.get("/api/read/report/:report_id/", (req, res, next) => {
     const {
         report_id,
@@ -101,7 +85,7 @@ app.get("/api/read/report/:report_id/", (req, res, next) => {
 
     const query = `SELECT * FROM report WHERE report_id = ${report_id}`;
 
-    db.run(query, (err, results) => {
+    db.all(query, [], (err, results) => {
         if (!err) {
             return res.status(200).send(results);
         } else {
@@ -110,7 +94,21 @@ app.get("/api/read/report/:report_id/", (req, res, next) => {
     });
 });
 
-// DELETE
+// READ all reports
+app.get("/api/read/report/", (req, res) => {
+    // limit???
+    const query = `SELECT * FROM report`;
+
+    db.all(query, [], (err, results) => {
+        if (!err) {
+            return res.status(200).send(results);
+        } else {
+            return res.status(500).send(err);
+        }
+    });
+});
+
+// DELETE a report given its id
 app.delete("/api/delete/report/:report_id/", (req, res, next) => {
     const {
         report_id,
@@ -129,79 +127,84 @@ app.delete("/api/delete/report/:report_id/", (req, res, next) => {
 
 // //// Incident Database
 
-// CREATE
-app.put("/api/create/incident/", (req, res, next) => {
-    // Survey Monkey should not be passed from the frontend, it should be created by a function
-    // on the server. That functionality to create a server and bind it to the new incident should
-    // take place here.
+// Create a new SurveyMonkey survey
+function createNewSurvey(cb) {
+    const testData = {
+        title: "New Survey",
+        from_survey_id: "158112240",
+    };
 
-    createNewSurvey( (err, surveyVal) => {
-      if (!err) {
-        const { id: surveyId } = surveyVal;
-        const {
-            progress,
-            coordinates,
-            resolution,
-            updated,
-        } = req.body;
+    let buffer = "";
 
-        const query = `INSERT INTO incident (survey_monkey, progress, coordinates, resolution, updated) `
-            + `VALUES ('${surveyId}', ${progress}, '${coordinates}', '${resolution}', ${updated})`;
+    const options = {
+        hostname: "api.surveymonkey.com",
+        path: "/v3/surveys",
+        method: "POST",
+        headers: {
+            "Content-Type": "application/JSON",
+            Authorization: `bearer ${surveymonkey_key}`,
+        },
+    };
 
-        db.run(query, (err) => {
-            if (!err) {
-                return res.status(200);
-            } else {
-                return res.status(500).send(err);
-            }
+    const req = https.request(options, (res) => {
+        res.on("data", (d) => {
+            buffer += d;
         });
-      }
-      else {
-        console.log(err);
-      }
+        res.on("end", () => cb(null, buffer)).on("error", err => cb(err));
+    });
+    req.write(JSON.stringify(testData));
+    req.end();
+}
+
+// Create a new incident
+function createNewIncident(data, cb) {
+    createNewSurvey((err, surveyVal) => {
+        if (!err) {
+            const parsedSurveyVal = JSON.parse(surveyVal);
+            const { id: surveyId } = parsedSurveyVal;
+            const {
+                progress = "No progress",
+                coordinates,
+                resolution = "No resolution",
+                updatedAt,
+            } = data;
+
+            const query = `INSERT INTO incident (survey_monkey, progress, coordinates, resolution, updated) `
+            + `VALUES ('${surveyId}', '${progress}', '${coordinates}', '${resolution}', '${updatedAt}')`;
+
+            db.run(query, (err, results) => cb(err, results));
+        } else {
+            return cb(err);
+        }
+    });
+}
+
+// // CREATE a new incident
+// app.put("/api/create/incident/", (req, res, next) => {
+//     createNewIncident(req.body, (err, results) => {
+//         if (!err) {
+//             return res.status(200);
+//         } else {
+//             return res.status(500).send(err);
+//         }
+//     });
+// });
+
+// READ all reports
+app.get("/api/read/incident/", (req, res) => {
+    // limit???
+    const query = `SELECT * FROM incident`;
+
+    db.all(query, [], (err, results) => {
+        if (!err) {
+            return res.status(200).send(results);
+        } else {
+            return res.status(500).send(err);
+        }
     });
 });
 
-function createNewSurvey(cb) {
-  var testData = {
-    'title': 'New Survey',
-    'from_survey_id':'158112240'
-  }
-
-  var buffer;
-
-  var options = {
-    hostname: 'api.surveymonkey.com',
-    path: '/v3/surveys',
-    method: 'POST',
-    headers: {
-         'Content-Type': 'application/JSON',
-         //'Content-Length': testData.length,
-         'Authorization' : `bearer ${surveymonkey_key}`
-       }
-  };
-
-  var req = https.request(options, (res) => {
-    //console.log('statusCode:', res.statusCode);
-    //console.log('headers:', res.headers);
-
-    res.on('data', (d) => {
-      buffer = buffer + d;
-    });
-
-    res.on('end', () => {
-      return cb(null, buffer);
-    }).on('error', (err) => {
-      return cb(err);
-    });
-  });
-  req.write(JSON.stringify(testData));
-  req.end(()=>{
-    // console.log(buffer, "final buffer");
-  });
-}
-
-// READ
+// READ an incident, given its id
 app.get("/api/read/incident/:incident_id/", (req, res, next) => {
     const {
         incident_id,
@@ -211,7 +214,6 @@ app.get("/api/read/incident/:incident_id/", (req, res, next) => {
 
     db.run(query, (err, results) => {
         if (!err) {
-            console.log(results);
             return res.status(200).send(results);
         } else {
             return res.status(500).send(err);
@@ -219,7 +221,7 @@ app.get("/api/read/incident/:incident_id/", (req, res, next) => {
     });
 });
 
-// DELETE
+// DELETE an incident, given its id
 app.delete("/api/delete/incident/:incident_id/", (req, res, next) => {
     const {
         incident_id,
@@ -236,51 +238,50 @@ app.delete("/api/delete/incident/:incident_id/", (req, res, next) => {
     });
 });
 
+// Source: https://stackoverflow.com/questions/27928/calculate-distance-between-two-latitude-longitude-points-haversine-formula
+function deg2rad(deg) {
+    return deg * (Math.PI / 180);
+}
+
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1); // deg2rad below
+    const dLon = deg2rad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2))
+      * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return d;
+}
+
 // GET
-app.get("/api/distance/:lat/:lng", (req, res, next) => {
+app.get("/api/distance/:lat/:lng", (req, res) => {
     const {
-        lat, lng,
+        lat: lat1,
+        lng: lng1,
     } = req.params;
 
-    // Form: [`123.123, 123.123`]
-    const origins = [`${lat},${lng}`];
-    // Append every entry that has a coordinate
-    const destinations = [];
-
-    db.all(`SELECT coordinates from incident`, [], (err, rows) => {
+    db.all(`SELECT * from incident`, [], (err, rows) => {
         if (err) {
-            throw err;
-        }
-
-        rows.forEach((row) => {
-            destinations.push(row.coordinates);
-        });
-
-        distance.matrix(origins, destinations, (err, distances) => {
-            if (!err) {
-                console.log(distances);
-
-                for (let i = 0; i < distances.rows.length; i++) {
-                    // console.log(distance.split(" ")[0]);
-                    let distance = distances.rows[i].elements[0].distance.text;
-                    console.log(distance);
-                    distance = distance.split(" ")[0];
-
-                    if (distance.includes("km")) {
-                        distance *= 1000;
-                    }
-
-                    if (distance < DISTANCE_THRESHOLD) {
-                        return res.json({
-                            existingIncident: true,
-                        });
-                    }
+            return res.status(500).send(err);
+        } else {
+            let existingIncidentID;
+            const existingIncident = rows.some((curRow) => {
+                const [lat2, lng2] = curRow.coordinates.split(",");
+                const distanceValue = getDistanceFromLatLonInKm(lat1, lng1, lat2, lng2);
+                if (distanceValue < DISTANCE_THRESHOLD) {
+                    existingIncidentID = curRow.incident_id;
+                    return true;
+                } else {
+                    return false;
                 }
-                return res.json({
-                    existingIncident: false,
-                });
-            }
-        });
+            });
+            return res.status(200).json({
+                existingIncident,
+                existingIncidentID,
+            });
+        }
     });
 });
 
