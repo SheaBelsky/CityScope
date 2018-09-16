@@ -1,10 +1,12 @@
-const dotenv = require('dotenv');
+const dotenv = require("dotenv");
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
-const path = require("path");
+const SWPrecacheWebpackPlugin = require("sw-precache-webpack-plugin");
 const webpack = require("webpack");
 
+const PUBLIC_PATH = "http://localhost:3000/";
+
 // Environment variables
-// call dotenv and it will return an Object with a parsed key 
+// call dotenv and it will return an Object with a parsed key
 const env = dotenv.config().parsed;
 
 // reduce it to a nice object, the same as before
@@ -16,9 +18,17 @@ const envKeys = Object.keys(env).reduce((prev, next) => {
 
 const plugins = [
     new ExtractTextPlugin({
-        filename: "css/styles.css"
+        filename: "css/styles.css",
     }),
-    new webpack.DefinePlugin(envKeys)
+    new SWPrecacheWebpackPlugin({
+        cacheId: "CityScope",
+        dontCacheBustUrlsMatching: /\.\w{8}\./,
+        filename: "service-worker.js",
+        minify: true,
+        navigateFallback: `${PUBLIC_PATH}index.html`,
+        staticFileGlobsIgnorePatterns: [/\.map$/, /asset-manifest\.json$/],
+    }),
+    new webpack.DefinePlugin(envKeys),
 ];
 
 module.exports = {
@@ -33,23 +43,23 @@ module.exports = {
     module: {
         rules: [
             {
-                test:    /\.js$/,
+                test: /\.js$/,
                 exclude: /node_modules/,
-                loader:  "babel-loader"
+                loader: "babel-loader",
             },
             {
-                test:   /\.css$/,
+                test: /\.css$/,
                 use: ExtractTextPlugin.extract({
                     fallback: "style-loader",
-                    use:      "css-loader"
-                })
+                    use: "css-loader",
+                }),
             },
             {
                 test: /\.less$/,
                 use: ExtractTextPlugin.extract({
                     fallback: "style-loader",
-                    use:      ["css-loader", "less-loader"]
-                })
+                    use: ["css-loader", "less-loader"],
+                }),
             },
             {
                 test: /\.(woff|woff2|eot|ttf)$/,
@@ -57,10 +67,10 @@ module.exports = {
                     {
                         loader: "url-loader?limit=100000",
                         options: {
-                            name: "css/[hash].[ext]"
-                        }
-                    }
-                ]
+                            name: "css/[hash].[ext]",
+                        },
+                    },
+                ],
             },
             {
                 test: /\.(jpe?g|png|gif|svg)$/i,
@@ -68,19 +78,19 @@ module.exports = {
                     {
                         loader: "file-loader?limit=100000",
                         options: {
-                            name: "img/[name].[ext]"
-                        }
+                            name: "img/[name].[ext]",
+                        },
                     },
-                    "img-loader"
-                ]
+                    "img-loader",
+                ],
             },
             {
                 test: /\.(ico|pdf)$/i,
                 use: [
-                    "file-loader?name=img/[name].[ext]"
-                ]
-            }
+                    "file-loader?name=img/[name].[ext]",
+                ],
+            },
         ],
     },
-    plugins: plugins
+    plugins,
 };
