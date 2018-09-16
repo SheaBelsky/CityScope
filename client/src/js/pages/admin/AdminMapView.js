@@ -11,8 +11,8 @@ class AdminMapView extends React.Component {
         super();
         this.state = {
             center: {
-                lat: 59.95,
-                lng: 30.33,
+                lat: 43.472572799999995,
+                lng: -80.54004979999999,
             },
             loaded: false,
             markers: [],

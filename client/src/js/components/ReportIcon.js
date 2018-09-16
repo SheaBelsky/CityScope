@@ -44,7 +44,7 @@ class ReportIcon extends React.Component {
             coordinates: {
                 lat, lng,
             },
-            createdAt,
+            updated,
             description,
             id,
         } = marker;
@@ -76,12 +76,8 @@ class ReportIcon extends React.Component {
                                         <Form onSubmit={this.createReport}>
                                             <h2>Report Details</h2>
                                             {description}
-                                            <TextArea
-                                                autoFocus
-                                                name="issueDetails"
-                                                placeholder="Resolution of this report?"
-                                                value={marker.resolution}
-                                            />
+                                            <h2 style={{ marginTop: 10 }}>Created At</h2>
+                                            {`${new Date(updated * 1000).toLocaleDateString()}`}
                                             <Form.Button
                                                 style={{
                                                     display: "block",
