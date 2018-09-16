@@ -92,20 +92,34 @@ class UserMapView extends React.Component {
             createdAt: now,
             updatedAt: now,
         };
-        let numReports = localStorage.getItem("numReports");
-        if (numReports !== null && !isNaN(numReports)) {
-            numReports = parseInt(numReports);
-            report.id = numReports + 1;
-            const stringifiedReport = JSON.stringify(report);
-            localStorage.setItem("numReports", `${report.id}`);
-            localStorage.setItem(`report${report.id}`, stringifiedReport);
-        } else {
-            report.id = 1;
-            const stringifiedReport = JSON.stringify(report);
-            localStorage.setItem("numReports", "1");
-            localStorage.setItem("report1", stringifiedReport);
-        }
-        this.resetModal();
+        fetch("/api/create/report", {
+            method: "put",
+            body: JSON.stringify(report),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        })
+            .then((response) => {
+                console.log(response);
+                this.resetModal();
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+
+        // let numReports = localStorage.getItem("numReports");
+        // if (numReports !== null && !isNaN(numReports)) {
+        //     numReports = parseInt(numReports);
+        //     report.id = numReports + 1;
+        //     const stringifiedReport = JSON.stringify(report);
+        //     localStorage.setItem("numReports", `${report.id}`);
+        //     localStorage.setItem(`report${report.id}`, stringifiedReport);
+        // } else {
+        //     report.id = 1;
+        //     const stringifiedReport = JSON.stringify(report);
+        //     localStorage.setItem("numReports", "1");
+        //     localStorage.setItem("report1", stringifiedReport);
+        // }
     }
 
     // Retrieves markers from localStorage, processes them, and returns in the form of an array
