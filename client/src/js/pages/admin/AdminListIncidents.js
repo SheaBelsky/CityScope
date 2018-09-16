@@ -21,10 +21,6 @@ class AdminListIncidents extends React.Component {
     }
 
     // ==============
-    // Event handlers
-    // ==============
-
-    // ==============
     // Custom Methods
     // ==============
     changeActiveIncident = (incident_id) => {
@@ -83,8 +79,55 @@ class AdminListIncidents extends React.Component {
 }
 
 class IncidentModal extends React.Component {
+    constructor(props) {
+        super(props);
+        const { incident } = props;
+        this.state = {
+            progress: incident.progress,
+            resolution: incident.resolution,
+        };
+    }
+
+    // ==============
+    // Event handlers
+    // ==============
+    handleProgressChange = (event) => {
+        this.setState({ progress: event.target.value });
+    }
+
+    handleResolutionChange = (event) => {
+        this.setState({ resolution: event.target.value });
+    }
+
+    updateIncident = () => {
+        const { progress, resolution } = this.state;
+        const { incident } = this.props;
+        const now = Math.round((new Date()).getTime() / 1000);
+        const data = {
+            progress,
+            resolution,
+            incident_id: incident.incident_id,
+            updatedAt: now,
+        };
+        fetch(`/api/update/incident/${incident.incident_id}`, {
+            method: "put",
+            body: JSON.stringify(data),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }).then((response) => {
+            this.setState({
+                progress: "",
+                resolution: "",
+            });
+        }).catch((err) => {
+            console.error(err, "error");
+        });
+    }
+
     render() {
         const { incident, showModal } = this.props;
+        const { progress, resolution } = this.state;
         return (
             <Modal
                 closeOnDocumentClick={true}
@@ -95,18 +138,20 @@ class IncidentModal extends React.Component {
                 <Modal.Content>
                     <Modal.Description>
                         <h2>Progress</h2>
-                        <Form onSubmit={this.createReport}>
+                        <Form onSubmit={this.updateIncident}>
                             <h2>Incident Progress</h2>
                             <TextArea
                                 autoFocus
                                 name="progress"
-                                value={incident.progress}
+                                onChange={this.handleProgressChange}
+                                value={progress}
                             />
                             <h2>Incident Resolution</h2>
                             <TextArea
                                 autoFocus
                                 name="resolution"
-                                value={incident.resolution}
+                                onChange={this.handleResolutionChange}
+                                value={resolution}
                             />
                             <Form.Button
                                 style={{

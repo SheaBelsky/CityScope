@@ -209,6 +209,27 @@ app.get("/api/read/incident/:incident_id/", (req, res, next) => {
     });
 });
 
+app.put("/api/update/incident/:incident_id/", (req, res, next) => {
+    const {
+        incident_id,
+        progress = "No progress",
+        resolution = "No resolution",
+        updatedAt,
+    } = req.body;
+    console.log(req.body);
+
+    const query = `UPDATE incident SET progress='${progress}', resolution='${resolution}', updated=${updatedAt} WHERE incident_id=${incident_id}`;
+
+    db.run(query, (err, results) => {
+        if (!err) {
+            return res.status(200).send(results);
+        } else {
+            console.log(err);
+            return res.status(500).send(err);
+        }
+    });
+});
+
 // DELETE an incident, given its id
 app.delete("/api/delete/incident/:incident_id/", (req, res, next) => {
     const {
