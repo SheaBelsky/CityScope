@@ -97,8 +97,8 @@ class UserMapView extends React.Component {
             numReports = parseInt(numReports);
             report.id = numReports + 1;
             const stringifiedReport = JSON.stringify(report);
-            localStorage.setItem("numReports", `${numReports + 1}`);
-            localStorage.setItem(`report${numReports}`, stringifiedReport);
+            localStorage.setItem("numReports", `${report.id}`);
+            localStorage.setItem(`report${report.id}`, stringifiedReport);
         } else {
             report.id = 1;
             const stringifiedReport = JSON.stringify(report);
@@ -149,7 +149,13 @@ class UserMapView extends React.Component {
                         <Modal.Description>
                             <Form onSubmit={this.createReport}>
                                 <h2>Describe the issue in detail</h2>
-                                <TextArea placeholder="Tell us more" name="issueDetails" onChange={this.handleTextAreaChange} value={reportDescription} />
+                                <TextArea
+                                    autoFocus
+                                    name="issueDetails"
+                                    onChange={this.handleTextAreaChange}
+                                    placeholder="Tell us more"
+                                    value={reportDescription}
+                                />
                                 <Form.Button
                                     style={{
                                         display: "block",
