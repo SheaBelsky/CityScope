@@ -7,9 +7,10 @@ Author: Zachary Anderson AKA ZachARuba
     INITIALIZATION
 */
 
-require('dotenv').load();
+require("dotenv").load();
 const express = require("express");
 const path = require("path");
+const SurveyMonkeyAPI = require("surveymonkey").SurveyMonkeyAPI;
 var SurveyMonkeyAPI = require('surveymonkey').SurveyMonkeyAPI;
 var distance = require('google-distance-matrix');
 distance.units('metric');
@@ -25,8 +26,6 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const surveymonkey_key = process.env.SURVEYMONKEY_AUTH;
-console.log(surveymonkey_key);
-const google_key = process.env.GOOGLE_AUTH;
 
 // Serve React app
 const clientDirectory = path.join(__dirname, "client", "dist");
@@ -38,11 +37,14 @@ var db = new sqlite3.Database('database.db');
 
 //Surveymonkey example
 try {
-    var api = new SurveyMonkeyAPI(surveymonkey_key, {version: 'v3', secure: false});
+    var api = new SurveyMonkeyAPI(surveymonkey_key, { version: "v3", secure: false });
 } catch (error) {
     console.log(error.message);
 }
 
+api.getSurveyList({}, (error, data) => {
+    if (error) { console.log(error.message); } else { console.log(JSON.stringify(data)); } // Do something with your data!
+});
 // api.getSurveyList({}, function (error, data) {
 //     if (error)
 //         console.log(error.message);
@@ -58,6 +60,7 @@ api.getSurveyDetails({id:'113260729'},function (error, data) {
         console.log(JSON.stringify(data)); // Do something with your data!
 });
 */
+
 
 ////// Report Database
 
@@ -183,6 +186,6 @@ app.get('/api/distance/:lat/:long', function (req, res, next) {
     });
 });
 
-app.listen(port, function () {
-    console.log("Go to http://localhost:" + port);
+app.listen(port, () => {
+    console.log(`Go to http://localhost:${port}`);
 });

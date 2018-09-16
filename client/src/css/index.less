@@ -1,4 +1,44 @@
-h1 {
-    font-family: Arial;
-    color: red;
+@import "semantic.less";
+
+@small: ~"screen and (max-width: 800px)";
+
+html, body, h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    padding: 0;
+}
+
+#root, .ui.grid.gridContainer {
+    height: 100vh;
+}
+
+#root, h1, h2, h3, h4, h5, h6, p {
+    font-family: 'Mukta Malar', sans-serif;
+}
+
+.mapContainer {
+    height: 80vh;
+    width: 100%;
+}
+
+.three.wide.column {
+    .ui.segment {
+        border: 0;
+        border-radius: 0;
+    }
+}
+
+.ui.grid.gridContainer {
+    margin: 0;
+
+    .column, .row {
+        padding: 0;
+    }
+}
+
+.ui.left.sidebar.menu.sidebarMenu {
+    width: 100%;
+
+    h1, h2, h3, h4, h5, h6 {
+        color: white;
+    }
 }
